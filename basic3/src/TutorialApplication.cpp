@@ -53,7 +53,7 @@ void TutorialApplication::createScene() {
     mWindow->getViewport(0)->setBackgroundColour(fadeColour);
     // mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour, 0, 600, 900);
     // mSceneMgr->setFog(Ogre::FOG_EXP, fadeColour, 0.002);
-    mSceneMgr->setFog(Ogre::FOG_EXP2, Ogre::ColourValue::White, 0.002);
+    mSceneMgr->setFog(Ogre::FOG_EXP2, fadeColour, 0.002);
 
     // terrain
     mTerrainGlobals = OGRE_NEW Ogre::TerrainGlobalOptions();
