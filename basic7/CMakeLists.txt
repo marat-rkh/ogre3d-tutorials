@@ -20,10 +20,12 @@ set(APP "OgreApp")
  
 set(HDRS
 	./src/OgreApplication.h
+    ./src/GuiManager.h
 )
  
 set(SRCS
 	./src/OgreApplication.cpp
+    ./src/GuiManager.cpp
 )
  
 include("tools/cmake/common.cmake") 

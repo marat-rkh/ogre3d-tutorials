@@ -38,10 +38,12 @@ bool OgreApplication::go() {
     initOIS();
     windowResized(mWindow);
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
-
+    mMouse->setEventCallback(this);
+    mKeyboard->setEventCallback(this);
     initCEGUI();
     
     createScene();
+    setupGUI();
     mRoot->addFrameListener(this);
     mRoot->startRendering();
     return true;
@@ -98,9 +100,6 @@ void OgreApplication::addResourceLocations(const Ogre::String &resourcesCfg) {
             locType = it->first;
             name = it->second;
             Ogre::ResourceGroupManager::getSingleton().addResourceLocation(name, locType, section);
-            // std::ostringstream log;
-            // log << "*** added resource location: " << name << " " << locType;
-            // ogreLog(log.str());
         }
     }
 }
@@ -149,6 +148,20 @@ void OgreApplication::createScene() {
     light->setPosition(20, 80, 50);
 }
 
+void OgreApplication::setupGUI() {
+    CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
+    CEGUI::Window *sheet = wmgr.createWindow("DefaultWindow", "CEGUIDemo/Sheet");
+    CEGUI::Window *quit = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
+    quit->setText("Quit");
+    quit->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
+    quit->subscribeEvent(
+        CEGUI::PushButton::EventClicked, 
+        CEGUI::Event::Subscriber([this](){ this->mGuiManager.pressExitButton(); })
+    );
+    sheet->addChild(quit);
+    CEGUI::System::getSingleton().getDefaultGUIContext().setRootWindow(sheet);
+}
+
 void OgreApplication::windowResized(Ogre::RenderWindow* rw) {
     setOISMouseArea(rw);
 }
@@ -158,16 +171,16 @@ void OgreApplication::windowClosed(Ogre::RenderWindow* rw) {
 }
 
 bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
-    if(mWindow->isClosed()) {
-        return false;
-    }
     //Need to capture/update each device
     mKeyboard->capture();
     mMouse->capture();
     //Need to inject timestamps to CEGUI System.
     CEGUI::System::getSingleton().injectTimePulse(evt.timeSinceLastFrame);
- 
-    if(mKeyboard->isKeyDown(OIS::KC_ESCAPE)) {
+
+    if(mWindow->isClosed() || 
+        mGuiManager.isExitButtonPressed() || 
+        mKeyboard->isKeyDown(OIS::KC_ESCAPE)) 
+    {
         return false;
     }
     return true;
