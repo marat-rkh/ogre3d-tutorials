@@ -71,12 +71,16 @@ private:
 
     CEGUI::OgreRenderer* mRenderer = nullptr;
 
-    bool setup();
+    bool initOgre();
     void addResourceLocations(const Ogre::String &resourcesCfg);
     void initOIS();
     void setOISMouseArea(Ogre::RenderWindow* rw);
     void destroyOIS(Ogre::RenderWindow* rw);
+    void initCEGUI();
+    CEGUI::MouseButton OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID);
     void createScene();
+
+    void ogreLog(const Ogre::String &msg);
 };
 
 #endif // #ifndef __OgreApplication_h_

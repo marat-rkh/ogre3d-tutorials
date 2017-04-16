@@ -32,13 +32,14 @@ OgreApplication::~OgreApplication() {
 }
 
 bool OgreApplication::go() {
-    if(!setup()) {
+    if(!initOgre()) {
         return false;
     }
-
     initOIS();
     windowResized(mWindow);
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
+
+    initCEGUI();
     
     createScene();
     mRoot->addFrameListener(this);
@@ -46,7 +47,7 @@ bool OgreApplication::go() {
     return true;
 }
 
-bool OgreApplication::setup() {
+bool OgreApplication::initOgre() {
 #ifdef _DEBUG
     mResourcesCfg = "resources_d.cfg";
     mPluginsCfg = "plugins_d.cfg";
@@ -86,22 +87,26 @@ void OgreApplication::addResourceLocations(const Ogre::String &resourcesCfg) {
     Ogre::ConfigFile cf;
     cf.load(resourcesCfg);
 
-    Ogre::String name, locType;
+    Ogre::String section, name, locType;
     Ogre::ConfigFile::SectionIterator secIt = cf.getSectionIterator();
 
     while (secIt.hasMoreElements()) {
+        section = secIt.peekNextKey();
         Ogre::ConfigFile::SettingsMultiMap* settings = secIt.getNext();
         Ogre::ConfigFile::SettingsMultiMap::iterator it;
         for (it = settings->begin(); it != settings->end(); ++it) {
             locType = it->first;
             name = it->second;
-            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(name, locType);
+            Ogre::ResourceGroupManager::getSingleton().addResourceLocation(name, locType, section);
+            // std::ostringstream log;
+            // log << "*** added resource location: " << name << " " << locType;
+            // ogreLog(log.str());
         }
     }
 }
 
 void OgreApplication::initOIS() {
-    Ogre::LogManager::getSingletonPtr()->logMessage("*** Initializing OIS ***");
+    ogreLog("*** Initializing OIS ***");
     size_t windowHnd = 0;
     mWindow->getCustomAttribute("WINDOW", &windowHnd);
 
@@ -117,6 +122,21 @@ void OgreApplication::initOIS() {
     mMouse = static_cast<OIS::Mouse*>(
         mInputManager->createInputObject(OIS::OISMouse, /*buffered*/true)
     );
+}
+
+void OgreApplication::initCEGUI() {
+    ogreLog("*** Initializing GEGUI ***");
+    mRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
+
+    CEGUI::ImageManager::setImagesetDefaultResourceGroup("Imagesets");
+    CEGUI::Font::setDefaultResourceGroup("Fonts");
+    CEGUI::Scheme::setDefaultResourceGroup("Schemes");
+    CEGUI::WidgetLookManager::setDefaultResourceGroup("LookNFeel");
+    CEGUI::WindowManager::setDefaultResourceGroup("Layouts");
+
+    CEGUI::SchemeManager::getSingleton().createFromFile("TaharezLook.scheme");
+    CEGUI::System::getSingleton().getDefaultGUIContext().getMouseCursor()
+        .setDefaultImage("TaharezLook/MouseArrow");
 }
 
 void OgreApplication::createScene() {
@@ -144,6 +164,8 @@ bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
     //Need to capture/update each device
     mKeyboard->capture();
     mMouse->capture();
+    //Need to inject timestamps to CEGUI System.
+    CEGUI::System::getSingleton().injectTimePulse(evt.timeSinceLastFrame);
  
     if(mKeyboard->isKeyDown(OIS::KC_ESCAPE)) {
         return false;
@@ -175,23 +197,55 @@ void OgreApplication::destroyOIS(Ogre::RenderWindow* rw) {
 }
 
 bool OgreApplication::keyPressed(const OIS::KeyEvent &arg) {
+    CEGUI::GUIContext& context = CEGUI::System::getSingleton().getDefaultGUIContext();
+    context.injectKeyDown(static_cast<CEGUI::Key::Scan>(arg.key));
+    context.injectChar(static_cast<CEGUI::Key::Scan>(arg.text));
     return true;
 }
 
 bool OgreApplication::keyReleased(const OIS::KeyEvent &arg) {
+    CEGUI::System::getSingleton().getDefaultGUIContext()
+        .injectKeyUp(static_cast<CEGUI::Key::Scan>(arg.key));
     return true;
 }
 
 bool OgreApplication::mouseMoved(const OIS::MouseEvent &arg) {
+    CEGUI::GUIContext& context = CEGUI::System::getSingleton().getDefaultGUIContext();
+    context.injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
+    // Scroll wheel.
+    if (arg.state.Z.rel) {
+        context.injectMouseWheelChange(arg.state.Z.rel / 120.0f);
+    }
     return true;
 }
 
 bool OgreApplication::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
+    CEGUI::System::getSingleton().getDefaultGUIContext()
+        .injectMouseButtonDown(OIStoCEGUIMouseButton(id));
     return true;
 }
 
 bool OgreApplication::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
+    CEGUI::System::getSingleton().getDefaultGUIContext()
+        .injectMouseButtonUp(OIStoCEGUIMouseButton(id));
     return true;
+}
+
+CEGUI::MouseButton OgreApplication::OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID) {
+    switch (buttonID) {
+    case OIS::MB_Left:
+        return CEGUI::LeftButton;
+    case OIS::MB_Right:
+        return CEGUI::RightButton;
+    case OIS::MB_Middle:
+        return CEGUI::MiddleButton;
+    default:
+        return CEGUI::LeftButton;
+    }
+}
+
+void OgreApplication::ogreLog(const Ogre::String &msg) {
+    Ogre::LogManager::getSingletonPtr()->logMessage(msg);
 }
 
 //----------------------------------------------------------------------------
