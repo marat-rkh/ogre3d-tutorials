@@ -24,7 +24,8 @@ http://www.ogre3d.org/wiki/
 #include <OgreEntity.h>
  
 OgreApplication::OgreApplication() :
-    _GUIManager(_gameState)
+    _GUIManager(_gameState),
+    _inputSystemManager(_gameState, _GUIManager)
 {}
 
 OgreApplication::~OgreApplication() {
@@ -37,11 +38,13 @@ bool OgreApplication::go() {
     if(!initOgre()) {
         return false;
     }
-    initOIS();
+    ogreLog("*** Initializing OIS ***");
+    size_t windowHnd = 0;
+    mWindow->getCustomAttribute("WINDOW", &windowHnd);
+    _inputSystemManager.init(windowHnd);
     windowResized(mWindow);
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
-    mMouse->setEventCallback(this);
-    mKeyboard->setEventCallback(this);
+    
     ogreLog("*** Initializing GEGUI ***");
     _GUIManager.initGUISystem();
     
@@ -107,25 +110,6 @@ void OgreApplication::addResourceLocations(const Ogre::String &resourcesCfg) {
     }
 }
 
-void OgreApplication::initOIS() {
-    ogreLog("*** Initializing OIS ***");
-    size_t windowHnd = 0;
-    mWindow->getCustomAttribute("WINDOW", &windowHnd);
-
-    std::ostringstream windowHndStr;
-    windowHndStr << windowHnd;
-    OIS::ParamList pl;
-    pl.insert(std::make_pair(std::string("WINDOW"), windowHndStr.str()));
-
-    mInputManager = OIS::InputManager::createInputSystem(pl);
-    mKeyboard = static_cast<OIS::Keyboard*>(
-        mInputManager->createInputObject(OIS::OISKeyboard, /*buffered*/true)
-    );
-    mMouse = static_cast<OIS::Mouse*>(
-        mInputManager->createInputObject(OIS::OISMouse, /*buffered*/true)
-    );
-}
-
 void OgreApplication::createScene() {
     Ogre::Entity* ogreEntity = mSceneMgr->createEntity("ogrehead.mesh");
     Ogre::SceneNode* ogreNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
@@ -137,89 +121,25 @@ void OgreApplication::createScene() {
 }
 
 void OgreApplication::windowResized(Ogre::RenderWindow* rw) {
-    setOISMouseArea(rw);
-}
-
-void OgreApplication::windowClosed(Ogre::RenderWindow* rw) {
-    destroyOIS(rw);
-}
-
-bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
-    //Need to capture/update each device
-    mKeyboard->capture();
-    mMouse->capture();
-
-    if(mWindow->isClosed() || 
-        _gameState.isExitGame() || 
-        mKeyboard->isKeyDown(OIS::KC_ESCAPE)) 
-    {
-        return false;
-    }
-    return true;
-}
-
-// Adjust mouse clipping area
-void OgreApplication::setOISMouseArea(Ogre::RenderWindow* rw) {
     unsigned int width, height, depth;
     int left, top;
     rw->getMetrics(width, height, depth, left, top);
-
-    const OIS::MouseState &ms = mMouse->getMouseState();
-    ms.width = width;
-    ms.height = height;
+    _inputSystemManager.setMouseArea(width, height);
 }
 
-// Unattach OIS before window shutdown (very important under Linux)
-void OgreApplication::destroyOIS(Ogre::RenderWindow* rw) {
-    // Only close for window that created OIS
-    if(rw == mWindow && mInputManager) {
-        mInputManager->destroyInputObject(mMouse);
-        mInputManager->destroyInputObject(mKeyboard);
-
-        OIS::InputManager::destroyInputSystem(mInputManager);
-        mInputManager = nullptr;
+void OgreApplication::windowClosed(Ogre::RenderWindow* rw) {
+    if(rw == mWindow) {
+        _inputSystemManager.destroy();
     }
 }
 
-bool OgreApplication::keyPressed(const OIS::KeyEvent &arg) {
-    _GUIManager.notifyKeyPressed(
-        static_cast<CEGUI::Key::Scan>(arg.key),
-        static_cast<CEGUI::Key::Scan>(arg.text)
-    );
-    return true;
-}
-
-bool OgreApplication::keyReleased(const OIS::KeyEvent &arg) {
-    _GUIManager.notifyKeyReleased(static_cast<CEGUI::Key::Scan>(arg.key));
-    return true;
-}
-
-bool OgreApplication::mouseMoved(const OIS::MouseEvent &arg) {
-    _GUIManager.notifyMouseMoved(arg.state.X.rel, arg.state.Y.rel, arg.state.Z.rel);
-    return true;
-}
-
-bool OgreApplication::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
-    _GUIManager.notifyMousePressed(OIStoCEGUIMouseButton(id));
-    return true;
-}
-
-bool OgreApplication::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
-    _GUIManager.notifyMouseReleased(OIStoCEGUIMouseButton(id));
-    return true;
-}
-
-CEGUI::MouseButton OgreApplication::OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID) {
-    switch (buttonID) {
-    case OIS::MB_Left:
-        return CEGUI::LeftButton;
-    case OIS::MB_Right:
-        return CEGUI::RightButton;
-    case OIS::MB_Middle:
-        return CEGUI::MiddleButton;
-    default:
-        return CEGUI::LeftButton;
+bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
+    _GUIManager.notifyFrameRenderingQueued(evt.timeSinceLastFrame);
+    _inputSystemManager.notifyFrameRenderingQueued();
+    if(mWindow->isClosed() || _gameState.isExitGame()) {
+        return false;
     }
+    return true;
 }
 
 void OgreApplication::ogreLog(const Ogre::String &msg) {

@@ -24,22 +24,13 @@ http://www.ogre3d.org/wiki/
 #include <OgreViewport.h>
 #include <OgreWindowEventUtilities.h>
 
-#include <OISEvents.h>
-#include <OISInputManager.h>
-#include <OISKeyboard.h>
-#include <OISMouse.h>
-
-#include <CEGUI/CEGUI.h>
-#include <CEGUI/RendererModules/Ogre/Renderer.h>
-
 #include "GameState.h"
+#include "InputSystemManager.h"
 #include "GuiManager.h"
 
 class OgreApplication : 
     public Ogre::WindowEventListener, 
-    public Ogre::FrameListener,
-    public OIS::KeyListener,
-    public OIS::MouseListener
+    public Ogre::FrameListener
 {
 public:
     OgreApplication();
@@ -52,13 +43,6 @@ protected:
     void windowClosed(Ogre::RenderWindow* rw) override;
     // Ogre::FrameListener
     bool frameRenderingQueued(const Ogre::FrameEvent& evt) override;
-    // OIS::KeyListener
-    bool keyPressed(const OIS::KeyEvent &arg) override;
-    bool keyReleased(const OIS::KeyEvent &arg) override;
-    // OIS::MouseListener
-    bool mouseMoved(const OIS::MouseEvent &arg) override;
-    bool mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) override;
-    bool mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) override;
 private:
     Ogre::Root* mRoot = nullptr;
     Ogre::String mResourcesCfg = Ogre::StringUtil::BLANK;
@@ -68,20 +52,13 @@ private:
 
     Ogre::Camera* mCamera = nullptr;
 
-    OIS::InputManager* mInputManager = nullptr;
-    OIS::Mouse* mMouse = nullptr;
-    OIS::Keyboard* mKeyboard = nullptr;
-
     GameState _gameState;
 
+    InputSystemManager _inputSystemManager;
     GuiManager _GUIManager;
 
     bool initOgre();
     void addResourceLocations(const Ogre::String &resourcesCfg);
-    void initOIS();
-    void setOISMouseArea(Ogre::RenderWindow* rw);
-    void destroyOIS(Ogre::RenderWindow* rw);
-    CEGUI::MouseButton OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID);
     void createScene();
 
     void ogreLog(const Ogre::String &msg);
