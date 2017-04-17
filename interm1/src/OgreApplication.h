@@ -28,6 +28,8 @@ http://www.ogre3d.org/wiki/
 #include "InputSystemManager.h"
 #include "GuiManager.h"
 
+#include <deque>
+
 class OgreApplication : 
     public Ogre::WindowEventListener, 
     public Ogre::FrameListener
@@ -57,11 +59,23 @@ private:
     InputSystemManager _inputSystemManager;
     GuiManager _GUIManager;
 
+    std::deque<Ogre::Vector3> mWalkList;
+ 
+    Ogre::Real mDistance;
+    Ogre::Real mWalkSpd;
+    Ogre::Vector3 mDirection;
+    Ogre::Vector3 mDestination;
+    Ogre::AnimationState* mAnimationState;
+    Ogre::Entity* mEntity;
+    Ogre::SceneNode* mNode;
+
     bool initOgre();
     void addResourceLocations(const Ogre::String &resourcesCfg);
     void createScene();
 
     void ogreLog(const Ogre::String &msg);
+
+    bool nextLocation();
 };
 
 #endif // #ifndef __OgreApplication_h_

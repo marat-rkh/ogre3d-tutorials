@@ -25,7 +25,14 @@ http://www.ogre3d.org/wiki/
  
 OgreApplication::OgreApplication() :
     _GUIManager(_gameState),
-    _inputSystemManager(_gameState, _GUIManager)
+    _inputSystemManager(_gameState, _GUIManager),
+    mDistance(0),
+    mWalkSpd(70.0),
+    mDirection(Ogre::Vector3::ZERO),
+    mDestination(Ogre::Vector3::ZERO),
+    mAnimationState(0),
+    mEntity(0),
+    mNode(0)
 {}
 
 OgreApplication::~OgreApplication() {
@@ -111,13 +118,41 @@ void OgreApplication::addResourceLocations(const Ogre::String &resourcesCfg) {
 }
 
 void OgreApplication::createScene() {
-    Ogre::Entity* ogreEntity = mSceneMgr->createEntity("ogrehead.mesh");
-    Ogre::SceneNode* ogreNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-    ogreNode->attachObject(ogreEntity);
+    mSceneMgr->setAmbientLight(Ogre::ColourValue(1, 1, 1));
 
-    mSceneMgr->setAmbientLight(Ogre::ColourValue(.5, .5, .5));
-    Ogre::Light* light = mSceneMgr->createLight("MainLight");
-    light->setPosition(20, 80, 50);
+    mEntity = mSceneMgr->createEntity("robot.mesh");
+    mNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(Ogre::Vector3(0, 0, 25.0));
+    mNode->attachObject(mEntity);
+
+    mWalkList.push_back(Ogre::Vector3(550.0, 0, 50.0));
+    mWalkList.push_back(Ogre::Vector3(-100.0, 0, -200.0));
+    mWalkList.push_back(Ogre::Vector3(0, 0, 25.0));
+
+    Ogre::Entity* ent;
+    Ogre::SceneNode* node;
+     
+    ent = mSceneMgr->createEntity("knot.mesh");
+    node = mSceneMgr->getRootSceneNode()->createChildSceneNode(Ogre::Vector3(0, -10.0, 25.0));
+    node->attachObject(ent);
+    node->setScale(0.1, 0.1, 0.1);
+
+    ent = mSceneMgr->createEntity("knot.mesh");
+    node = mSceneMgr->getRootSceneNode()->createChildSceneNode(Ogre::Vector3(550.0, -10.0, 50.0));
+    node->attachObject(ent);
+    node->setScale(0.1, 0.1, 0.1);
+     
+    ent = mSceneMgr->createEntity("knot.mesh");
+    node = mSceneMgr->getRootSceneNode()->createChildSceneNode(Ogre::Vector3(-100.0, -10.0,-200.0));
+    node->attachObject(ent);
+    node->setScale(0.1, 0.1, 0.1);
+
+    mCamera->setPosition(90.0, 280.0, 535.0);
+    mCamera->pitch(Ogre::Degree(-30.0));
+    mCamera->yaw(Ogre::Degree(-15.0));
+
+    mAnimationState = mEntity->getAnimationState("Idle");
+    mAnimationState->setLoop(true);
+    mAnimationState->setEnabled(true);
 }
 
 void OgreApplication::windowResized(Ogre::RenderWindow* rw) {
@@ -139,11 +174,52 @@ bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
     if(mWindow->isClosed() || _gameState.isExitGame()) {
         return false;
     }
+    if(mDirection == Ogre::Vector3::ZERO) {
+        if(nextLocation()) {
+            mAnimationState = mEntity->getAnimationState("Walk");
+            mAnimationState->setLoop(true);
+            mAnimationState->setEnabled(true);
+        }
+    } else {
+        Ogre::Real move = mWalkSpd * evt.timeSinceLastFrame;
+        mDistance -= move;
+        if(mDistance <= 0.0) {
+            mNode->setPosition(mDestination);
+            mDirection = Ogre::Vector3::ZERO;
+            if(nextLocation()) {
+                Ogre::Vector3 src = mNode->getOrientation() * Ogre::Vector3::UNIT_X;
+                if ((1.0 + src.dotProduct(mDirection)) < 0.0001) {
+                    mNode->yaw(Ogre::Degree(180));
+                } else {
+                    Ogre::Quaternion quat = src.getRotationTo(mDirection);
+                    mNode->rotate(quat);
+                }
+            } else {
+                mAnimationState = mEntity->getAnimationState("Idle");
+                mAnimationState->setLoop(true);
+                mAnimationState->setEnabled(true);
+            }
+        } else {
+            mNode->translate(move * mDirection);
+        }
+    }
+    mAnimationState->addTime(evt.timeSinceLastFrame);
     return true;
 }
 
 void OgreApplication::ogreLog(const Ogre::String &msg) {
     Ogre::LogManager::getSingletonPtr()->logMessage(msg);
+}
+
+bool OgreApplication::nextLocation() {
+    if (mWalkList.empty()) {
+        return false;
+    }
+    mDestination = mWalkList.front();
+    mWalkList.pop_front();
+    mDirection = mDestination - mNode->getPosition();
+    mDistance = mDirection.normalise();
+    return true;
 }
 
 //----------------------------------------------------------------------------
