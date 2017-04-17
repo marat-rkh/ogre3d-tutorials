@@ -20,11 +20,13 @@ set(APP "OgreApp")
  
 set(HDRS
 	./src/OgreApplication.h
+    ./src/GameState.h
     ./src/GuiManager.h
 )
  
 set(SRCS
 	./src/OgreApplication.cpp
+    ./src/GameState.cpp
     ./src/GuiManager.cpp
 )
  

@@ -23,7 +23,9 @@ http://www.ogre3d.org/wiki/
 
 #include <OgreEntity.h>
  
-OgreApplication::OgreApplication() {}
+OgreApplication::OgreApplication() :
+    _GUIManager(_gameState)
+{}
 
 OgreApplication::~OgreApplication() {
     Ogre::WindowEventUtilities::removeWindowEventListener(mWindow, this);
@@ -40,10 +42,11 @@ bool OgreApplication::go() {
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
     mMouse->setEventCallback(this);
     mKeyboard->setEventCallback(this);
-    initCEGUI();
+    ogreLog("*** Initializing GEGUI ***");
+    _GUIManager.initGUISystem();
     
     createScene();
-    setupGUI();
+    _GUIManager.setupGUI();
     mRoot->addFrameListener(this);
     mRoot->startRendering();
     return true;
@@ -123,21 +126,6 @@ void OgreApplication::initOIS() {
     );
 }
 
-void OgreApplication::initCEGUI() {
-    ogreLog("*** Initializing GEGUI ***");
-    mRenderer = &CEGUI::OgreRenderer::bootstrapSystem();
-
-    CEGUI::ImageManager::setImagesetDefaultResourceGroup("Imagesets");
-    CEGUI::Font::setDefaultResourceGroup("Fonts");
-    CEGUI::Scheme::setDefaultResourceGroup("Schemes");
-    CEGUI::WidgetLookManager::setDefaultResourceGroup("LookNFeel");
-    CEGUI::WindowManager::setDefaultResourceGroup("Layouts");
-
-    CEGUI::SchemeManager::getSingleton().createFromFile("TaharezLook.scheme");
-    CEGUI::System::getSingleton().getDefaultGUIContext().getMouseCursor()
-        .setDefaultImage("TaharezLook/MouseArrow");
-}
-
 void OgreApplication::createScene() {
     Ogre::Entity* ogreEntity = mSceneMgr->createEntity("ogrehead.mesh");
     Ogre::SceneNode* ogreNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
@@ -146,20 +134,6 @@ void OgreApplication::createScene() {
     mSceneMgr->setAmbientLight(Ogre::ColourValue(.5, .5, .5));
     Ogre::Light* light = mSceneMgr->createLight("MainLight");
     light->setPosition(20, 80, 50);
-}
-
-void OgreApplication::setupGUI() {
-    CEGUI::WindowManager &wmgr = CEGUI::WindowManager::getSingleton();
-    CEGUI::Window *sheet = wmgr.createWindow("DefaultWindow", "CEGUIDemo/Sheet");
-    CEGUI::Window *quit = wmgr.createWindow("TaharezLook/Button", "CEGUIDemo/QuitButton");
-    quit->setText("Quit");
-    quit->setSize(CEGUI::USize(CEGUI::UDim(0.15, 0), CEGUI::UDim(0.05, 0)));
-    quit->subscribeEvent(
-        CEGUI::PushButton::EventClicked, 
-        CEGUI::Event::Subscriber([this](){ this->mGuiManager.pressExitButton(); })
-    );
-    sheet->addChild(quit);
-    CEGUI::System::getSingleton().getDefaultGUIContext().setRootWindow(sheet);
 }
 
 void OgreApplication::windowResized(Ogre::RenderWindow* rw) {
@@ -174,11 +148,9 @@ bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
     //Need to capture/update each device
     mKeyboard->capture();
     mMouse->capture();
-    //Need to inject timestamps to CEGUI System.
-    CEGUI::System::getSingleton().injectTimePulse(evt.timeSinceLastFrame);
 
     if(mWindow->isClosed() || 
-        mGuiManager.isExitButtonPressed() || 
+        _gameState.isExitGame() || 
         mKeyboard->isKeyDown(OIS::KC_ESCAPE)) 
     {
         return false;
@@ -210,37 +182,30 @@ void OgreApplication::destroyOIS(Ogre::RenderWindow* rw) {
 }
 
 bool OgreApplication::keyPressed(const OIS::KeyEvent &arg) {
-    CEGUI::GUIContext& context = CEGUI::System::getSingleton().getDefaultGUIContext();
-    context.injectKeyDown(static_cast<CEGUI::Key::Scan>(arg.key));
-    context.injectChar(static_cast<CEGUI::Key::Scan>(arg.text));
+    _GUIManager.notifyKeyPressed(
+        static_cast<CEGUI::Key::Scan>(arg.key),
+        static_cast<CEGUI::Key::Scan>(arg.text)
+    );
     return true;
 }
 
 bool OgreApplication::keyReleased(const OIS::KeyEvent &arg) {
-    CEGUI::System::getSingleton().getDefaultGUIContext()
-        .injectKeyUp(static_cast<CEGUI::Key::Scan>(arg.key));
+    _GUIManager.notifyKeyReleased(static_cast<CEGUI::Key::Scan>(arg.key));
     return true;
 }
 
 bool OgreApplication::mouseMoved(const OIS::MouseEvent &arg) {
-    CEGUI::GUIContext& context = CEGUI::System::getSingleton().getDefaultGUIContext();
-    context.injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
-    // Scroll wheel.
-    if (arg.state.Z.rel) {
-        context.injectMouseWheelChange(arg.state.Z.rel / 120.0f);
-    }
+    _GUIManager.notifyMouseMoved(arg.state.X.rel, arg.state.Y.rel, arg.state.Z.rel);
     return true;
 }
 
 bool OgreApplication::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
-    CEGUI::System::getSingleton().getDefaultGUIContext()
-        .injectMouseButtonDown(OIStoCEGUIMouseButton(id));
+    _GUIManager.notifyMousePressed(OIStoCEGUIMouseButton(id));
     return true;
 }
 
 bool OgreApplication::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
-    CEGUI::System::getSingleton().getDefaultGUIContext()
-        .injectMouseButtonUp(OIStoCEGUIMouseButton(id));
+    _GUIManager.notifyMouseReleased(OIStoCEGUIMouseButton(id));
     return true;
 }
 

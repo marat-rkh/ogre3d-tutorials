@@ -32,6 +32,7 @@ http://www.ogre3d.org/wiki/
 #include <CEGUI/CEGUI.h>
 #include <CEGUI/RendererModules/Ogre/Renderer.h>
 
+#include "GameState.h"
 #include "GuiManager.h"
 
 class OgreApplication : 
@@ -71,19 +72,17 @@ private:
     OIS::Mouse* mMouse = nullptr;
     OIS::Keyboard* mKeyboard = nullptr;
 
-    CEGUI::OgreRenderer* mRenderer = nullptr;
+    GameState _gameState;
 
-    GuiManager mGuiManager;
+    GuiManager _GUIManager;
 
     bool initOgre();
     void addResourceLocations(const Ogre::String &resourcesCfg);
     void initOIS();
     void setOISMouseArea(Ogre::RenderWindow* rw);
     void destroyOIS(Ogre::RenderWindow* rw);
-    void initCEGUI();
     CEGUI::MouseButton OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID);
     void createScene();
-    void setupGUI();
 
     void ogreLog(const Ogre::String &msg);
 };
