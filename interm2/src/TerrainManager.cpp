@@ -39,7 +39,7 @@ void TerrainManager::setupTerrain(Ogre::SceneManager* sceneMgr, Ogre::Light* lig
     mTerrainGroup->freeTemporaryResources();
 }
 
-void TerrainManager::nextFrame() {
+bool TerrainManager::frameRenderingQueued(const Ogre::FrameEvent& evt) {
     CEGUI::Window* terrainLabel = CEGUI::System::getSingleton()
         .getDefaultGUIContext().getRootWindow()->getChild("TerrainLabel");
  

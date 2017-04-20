@@ -11,7 +11,7 @@ public:
     virtual ~TerrainManager();
 
     void setupTerrain(Ogre::SceneManager *sceneMgr, Ogre::Light *light);
-    void nextFrame();
+    bool frameRenderingQueued(const Ogre::FrameEvent& evt);
     void handleCameraCollision(Ogre::SceneNode *cameraNode);
 private:
     bool mTerrainsImported = false;

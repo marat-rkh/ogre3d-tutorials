@@ -155,7 +155,7 @@ bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
     if(mWindow->isClosed() || _gameState.isExitGame()) {
         return false;
     }
-    _terrainManager.nextFrame();
+    _terrainManager.frameRenderingQueued(evt);
     _terrainManager.handleCameraCollision(_cameraNode);
     return true;
 }
