@@ -4,12 +4,15 @@
 #include <Terrain/OgreTerrain.h>
 #include <Terrain/OgreTerrainGroup.h>
 
+#include <OgreSceneNode.h>
+
 class TerrainManager {
 public:
     virtual ~TerrainManager();
 
-    void setupTerrain(Ogre::SceneManager* sceneMgr, Ogre::Light* light);
+    void setupTerrain(Ogre::SceneManager *sceneMgr, Ogre::Light *light);
     void nextFrame();
+    void handleCameraCollision(Ogre::SceneNode *cameraNode);
 private:
     bool mTerrainsImported = false;
     Ogre::TerrainGroup* mTerrainGroup = nullptr;

@@ -156,6 +156,7 @@ bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
         return false;
     }
     _terrainManager.nextFrame();
+    _terrainManager.handleCameraCollision(_cameraNode);
     return true;
 }
 

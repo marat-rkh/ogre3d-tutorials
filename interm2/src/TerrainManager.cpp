@@ -58,7 +58,19 @@ void TerrainManager::nextFrame() {
     }
 }
 
-void TerrainManager::configureTerrainDefaults(Ogre::SceneManager* sceneMgr, Ogre::Light* light) {
+void TerrainManager::handleCameraCollision(Ogre::SceneNode *cameraNode) {
+    Ogre::Vector3 camPos = cameraNode->getPosition();
+    Ogre::Ray camRay(Ogre::Vector3(camPos.x, 5000.0, camPos.z), Ogre::Vector3::NEGATIVE_UNIT_Y);
+    Ogre::TerrainGroup::RayResult result = mTerrainGroup->rayIntersects(camRay);
+    if (result.terrain) {
+        Ogre::Real terrainHeight = result.position.y;
+        if (camPos.y < (terrainHeight + 10.0)) {
+            cameraNode->setPosition(camPos.x, terrainHeight + 10.0, camPos.z);
+        }
+    }
+}
+
+void TerrainManager::configureTerrainDefaults(Ogre::SceneManager *sceneMgr, Ogre::Light *light) {
     mTerrainGlobals->setMaxPixelError(8);
     mTerrainGlobals->setCompositeMapDistance(3000);
     mTerrainGlobals->setLightMapDirection(light->getDerivedDirection());
