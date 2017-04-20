@@ -25,6 +25,9 @@ public:
 private:
     GameState &_gameState;
     CEGUI::OgreRenderer* _renderer = nullptr;
+
+    CEGUI::GUIContext *_guiContext = nullptr;
+    CEGUI::Vector2f _mousePosition;
 };
 
 #endif // #ifndef __GuiManager_h_

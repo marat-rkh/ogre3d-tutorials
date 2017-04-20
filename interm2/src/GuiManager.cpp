@@ -6,6 +6,7 @@ GuiManager::GuiManager(GameState &gameState) :
 
 void GuiManager::initGUISystem() {
     _renderer = &CEGUI::OgreRenderer::bootstrapSystem();
+    _guiContext = &CEGUI::System::getSingleton().getDefaultGUIContext();
 
     CEGUI::ImageManager::setImagesetDefaultResourceGroup("Imagesets");
     CEGUI::Font::setDefaultResourceGroup("Fonts");
@@ -17,13 +18,12 @@ void GuiManager::initGUISystem() {
 void GuiManager::setupGUI() {
     CEGUI::SchemeManager::getSingleton().createFromFile("TaharezLook.scheme");
     CEGUI::FontManager::getSingleton().createFromFile("DejaVuSans-10.font");
-    CEGUI::GUIContext& context = CEGUI::System::getSingleton().getDefaultGUIContext();
-    context.setDefaultFont("DejaVuSans-10");
-    context.getMouseCursor().setDefaultImage("TaharezLook/MouseArrow");
+    _guiContext->setDefaultFont("DejaVuSans-10");
+    _guiContext->getMouseCursor().setDefaultImage("TaharezLook/MouseArrow");
 
     CEGUI::WindowManager& wmgr = CEGUI::WindowManager::getSingleton();
     CEGUI::Window* rootWin = wmgr.loadLayoutFromFile("test.layout");
-    CEGUI::System::getSingleton().getDefaultGUIContext().setRootWindow(rootWin);
+    _guiContext->setRootWindow(rootWin);
 }
 
 void GuiManager::notifyFrameRenderingQueued(Ogre::Real timeSinceLastFrame) {
@@ -32,9 +32,8 @@ void GuiManager::notifyFrameRenderingQueued(Ogre::Real timeSinceLastFrame) {
 }
 
 void GuiManager::notifyKeyPressed(CEGUI::Key::Scan code, CEGUI::Key::Scan text) {
-    CEGUI::GUIContext& context = CEGUI::System::getSingleton().getDefaultGUIContext();
-    context.injectKeyDown(code);
-    context.injectChar(text);
+    _guiContext->injectKeyDown(code);
+    _guiContext->injectChar(text);
 }
 
 void GuiManager::notifyKeyReleased(CEGUI::Key::Scan code) {
@@ -42,20 +41,25 @@ void GuiManager::notifyKeyReleased(CEGUI::Key::Scan code) {
 }
 
 void GuiManager::notifyMouseMoved(float deltaX, float deltaY, float deltaWheel) {
-    CEGUI::GUIContext& context = CEGUI::System::getSingleton().getDefaultGUIContext();
-    context.injectMouseMove(deltaX, deltaY);
+    _guiContext->injectMouseMove(deltaX, deltaY);
     // Scroll wheel.
     if (deltaWheel) {
-        context.injectMouseWheelChange(deltaWheel / 120.0f);
+        _guiContext->injectMouseWheelChange(deltaWheel / 120.0f);
     }
 }
 
 void GuiManager::notifyMousePressed(CEGUI::MouseButton id) {
-    CEGUI::System::getSingleton().getDefaultGUIContext().injectMouseButtonDown(id);
+    _guiContext->injectMouseButtonDown(id);
+
+    _guiContext->getMouseCursor().hide();
+    _mousePosition = _guiContext->getMouseCursor().getPosition();
 }
 
 void GuiManager::notifyMouseReleased(CEGUI::MouseButton id) {
-    CEGUI::System::getSingleton().getDefaultGUIContext().injectMouseButtonUp(id);
+    _guiContext->injectMouseButtonUp(id);
+
+    _guiContext->getMouseCursor().setPosition(_mousePosition);
+    _guiContext->getMouseCursor().show();
 }
 
 void GuiManager::pressExitButton() {
