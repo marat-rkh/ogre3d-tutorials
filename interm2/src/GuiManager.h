@@ -6,6 +6,7 @@
 #include <OgrePrerequisites.h>
 #include <CEGUI/CEGUI.h>
 #include <CEGUI/RendererModules/Ogre/Renderer.h>
+#include <CEGUI/MouseCursor.h>
 
 #include "GameState.h"
 
@@ -22,6 +23,7 @@ public:
     void notifyMousePressed(CEGUI::MouseButton id);
     void notifyMouseReleased(CEGUI::MouseButton id);
     void pressExitButton();
+    CEGUI::MouseCursor& mouseCursor() { return _guiContext->getMouseCursor(); }
 private:
     GameState &_gameState;
     CEGUI::OgreRenderer* _renderer = nullptr;

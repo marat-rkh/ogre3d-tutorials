@@ -85,6 +85,9 @@ bool InputSystemManager::keyPressed(const OIS::KeyEvent &arg) {
     default:
         break;
     }
+    for(auto l : _listeners) {
+        l->keyPressed(arg);
+    }
     return true;
 }
 
@@ -130,6 +133,9 @@ bool InputSystemManager::keyReleased(const OIS::KeyEvent &arg) {
     default:
         break;
     }
+    for(auto l : _listeners) {
+        l->keyReleased(arg);
+    }
     return true;
 }
 
@@ -139,16 +145,25 @@ bool InputSystemManager::mouseMoved(const OIS::MouseEvent &arg) {
         _cameraNode->yaw(Ogre::Degree(-CAMERA_ROT * arg.state.X.rel), Ogre::Node::TS_WORLD);
         _cameraNode->pitch(Ogre::Degree(-CAMERA_ROT * arg.state.Y.rel), Ogre::Node::TS_LOCAL);
     }
+    for(auto l : _listeners) {
+        l->mouseMoved(arg);
+    }
     return true;
 }
 
 bool InputSystemManager::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
     _GUIManager.notifyMousePressed(OIStoCEGUIMouseButton(id));
+    for(auto l : _listeners) {
+        l->mousePressed(arg, id);
+    }
     return true;
 }
 
 bool InputSystemManager::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
     _GUIManager.notifyMouseReleased(OIStoCEGUIMouseButton(id));
+    for(auto l : _listeners) {
+        l->mouseReleased(arg, id);
+    }
     return true;
 }
 

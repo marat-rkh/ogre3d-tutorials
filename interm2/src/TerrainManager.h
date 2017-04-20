@@ -13,6 +13,7 @@ public:
     void setupTerrain(Ogre::SceneManager *sceneMgr, Ogre::Light *light);
     bool frameRenderingQueued(const Ogre::FrameEvent& evt);
     void handleCameraCollision(Ogre::SceneNode *cameraNode);
+    Ogre::TerrainGroup* terrainGroup() { return mTerrainGroup; }
 private:
     bool mTerrainsImported = false;
     Ogre::TerrainGroup* mTerrainGroup = nullptr;

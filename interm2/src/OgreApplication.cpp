@@ -30,6 +30,7 @@ OgreApplication::OgreApplication() :
 OgreApplication::~OgreApplication() {
     Ogre::WindowEventUtilities::removeWindowEventListener(mWindow, this);
     windowClosed(mWindow);
+    delete _robotsCreator;
     delete _inputSystemManager;
     delete mRoot;
 }
@@ -49,6 +50,15 @@ bool OgreApplication::go() {
     _GUIManager.initGUISystem();
     
     createScene();
+
+    _robotsCreator = new RobotsCreator(
+        mCamera, 
+        &_GUIManager.mouseCursor(), 
+        _terrainManager.terrainGroup(), 
+        mSceneMgr
+    );
+    _inputSystemManager->addInputEventListener(_robotsCreator);
+
     _GUIManager.setupGUI();
     mRoot->addFrameListener(this);
     mRoot->startRendering();

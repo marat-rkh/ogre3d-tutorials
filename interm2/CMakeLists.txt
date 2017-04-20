@@ -21,9 +21,11 @@ set(APP "OgreApp")
 set(HDRS
 	./src/OgreApplication.h
     ./src/GameState.h
+    ./src/InputEventListener.h
     ./src/InputSystemManager.h
     ./src/GuiManager.h
     ./src/TerrainManager.h
+    ./src/RobotsCreator.h
 )
  
 set(SRCS
@@ -32,6 +34,7 @@ set(SRCS
     ./src/InputSystemManager.cpp
     ./src/GuiManager.cpp
     ./src/TerrainManager.cpp
+    ./src/RobotsCreator.cpp
 )
  
 include("tools/cmake/common.cmake") 

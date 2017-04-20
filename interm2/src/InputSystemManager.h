@@ -2,6 +2,7 @@
 #define __InputSystemManager_h_
 
 #include "GameState.h"
+#include "InputEventListener.h"
 #include "GuiManager.h"
 
 #include <OISEvents.h>
@@ -13,7 +14,12 @@
 
 #include <OgreVector3.h>
 #include <OgreSceneNode.h>
+#include <OgreCamera.h>
 #include <OgreFrameListener.h>
+
+#include <vector>
+
+using std::vector;
 
 /*
 TODO: consider splitting this class. 
@@ -32,6 +38,7 @@ public:
     void destroy();
 
     bool frameRenderingQueued(const Ogre::FrameEvent& evt);
+    void addInputEventListener(InputEventListener *l) { _listeners.push_back(l); };
 protected:
     // OIS::KeyListener
     bool keyPressed(const OIS::KeyEvent &arg) override;
@@ -52,6 +59,8 @@ private:
     OIS::InputManager* mInputManager = nullptr;
     OIS::Mouse* mMouse = nullptr;
     OIS::Keyboard* mKeyboard = nullptr;
+
+    vector<InputEventListener*> _listeners;
 
     CEGUI::MouseButton OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID);
 };
