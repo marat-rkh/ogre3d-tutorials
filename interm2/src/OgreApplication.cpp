@@ -30,6 +30,7 @@ OgreApplication::OgreApplication() :
 OgreApplication::~OgreApplication() {
     Ogre::WindowEventUtilities::removeWindowEventListener(mWindow, this);
     windowClosed(mWindow);
+    delete _cameraManager;
     delete _robotsCreator;
     delete _inputSystemManager;
     delete mRoot;
@@ -39,14 +40,16 @@ bool OgreApplication::go() {
     if(!initOgre()) {
         return false;
     }
-    ogreLog("*** Initializing OIS ***");
+    _inputSystemManager = new InputSystemManager(_gameState);
     size_t windowHnd = 0;
     mWindow->getCustomAttribute("WINDOW", &windowHnd);
     _inputSystemManager->init(windowHnd);
     windowResized(mWindow);
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
-    
-    ogreLog("*** Initializing GEGUI ***");
+
+    _cameraManager = new BasicCameraManager(_cameraNode);
+    _inputSystemManager->addInputEventListener(_cameraManager);
+
     _GUIManager.initGUISystem();
     _inputSystemManager->addInputEventListener(&_GUIManager);
     
@@ -102,7 +105,6 @@ bool OgreApplication::initOgre() {
         Ogre::Vector3(0, 0, 0)
     );
     _cameraNode->attachObject(mCamera);
-    _inputSystemManager = new InputSystemManager(_gameState, _cameraNode);
 
     return true;
 }
@@ -160,9 +162,12 @@ void OgreApplication::windowClosed(Ogre::RenderWindow* rw) {
     }
 }
 
+// TODO consider puting all targets of frameRenderingQueued 
+// into vector
 bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
-    _GUIManager.frameRenderingQueued(evt);
     _inputSystemManager->frameRenderingQueued(evt);
+    _GUIManager.frameRenderingQueued(evt);
+    _cameraManager->frameRenderingQueued(evt);
     if(mWindow->isClosed() || _gameState.isExitGame()) {
         return false;
     }

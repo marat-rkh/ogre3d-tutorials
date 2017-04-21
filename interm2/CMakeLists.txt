@@ -26,6 +26,7 @@ set(HDRS
     ./src/GuiManager.h
     ./src/TerrainManager.h
     ./src/RobotsCreator.h
+    ./src/BasicCameraManager.h
 )
  
 set(SRCS
@@ -35,6 +36,7 @@ set(SRCS
     ./src/GuiManager.cpp
     ./src/TerrainManager.cpp
     ./src/RobotsCreator.cpp
+    ./src/BasicCameraManager.cpp
 )
  
 include("tools/cmake/common.cmake") 

@@ -29,6 +29,7 @@ http://www.ogre3d.org/wiki/
 #include "GuiManager.h"
 #include "TerrainManager.h"
 #include "RobotsCreator.h"
+#include "BasicCameraManager.h"
 
 class OgreApplication : 
     public Ogre::WindowEventListener, 
@@ -61,6 +62,7 @@ private:
     GuiManager _GUIManager;
     TerrainManager _terrainManager;
     RobotsCreator *_robotsCreator = nullptr;
+    BasicCameraManager *_cameraManager = nullptr;
 
     bool initOgre();
     void addResourceLocations(const Ogre::String &resourcesCfg);

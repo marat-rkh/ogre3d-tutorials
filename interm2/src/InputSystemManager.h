@@ -21,17 +21,12 @@
 
 using std::vector;
 
-/*
-TODO: consider splitting this class. 
-Create separate classes for OIS management, camera management,
-and classes for other group of input processing managers.
-*/
 class InputSystemManager : 
     public OIS::KeyListener,
     public OIS::MouseListener
 {
 public:
-    InputSystemManager(GameState &gameState, Ogre::SceneNode *cameraNode);
+    InputSystemManager(GameState &gameState);
 
     void init(size_t windowHnd);
     void setMouseArea(unsigned int width, unsigned int height);
@@ -49,11 +44,6 @@ protected:
     bool mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) override;
 private:
     GameState &_gameState;
-
-    Ogre::SceneNode *_cameraNode;
-    Ogre::Vector3 _cameraMovementDirection;
-    const Ogre::Real CAMERA_ROT = 0.13;
-    const Ogre::Real CAMERA_MOV_SPEED = 250;
 
     OIS::InputManager* mInputManager = nullptr;
     OIS::Mouse* mMouse = nullptr;
