@@ -17,6 +17,8 @@ public:
         Ogre::SceneManager *sceneManager
     );
 
+    virtual ~RobotsCreator();
+
     bool mousePressed(const OIS::MouseEvent &me, OIS::MouseButtonID id) override;
     bool mouseReleased(const OIS::MouseEvent &me, OIS::MouseButtonID id) override;
     bool mouseMoved(const OIS::MouseEvent &me) override;
@@ -27,13 +29,16 @@ private:
     CEGUI::MouseCursor *_mouseCursor;
     Ogre::TerrainGroup *_terrainGroup;
     Ogre::SceneManager *_sceneManager;
+    Ogre::RaySceneQuery* _raySceneQuery;
 
-    Ogre::SceneNode* _currentRobotNode = nullptr;
-    Ogre::SceneNode* _prevRobotNode = nullptr;
+    bool _leftMBPressed = false;
+    Ogre::SceneNode* _currentObjectNode = nullptr;
+    Ogre::SceneNode* _selectedNode = nullptr;
 
     bool _robotMode = true;
 
-    Ogre::TerrainGroup::RayResult castRayForCurrentMousePos(const OIS::MouseEvent &me);
+    Ogre::Ray castRayForCurrentMousePos(const OIS::MouseEvent &me);
+    Ogre::SceneNode* getSceneNodeUnderRay(Ogre::Ray ray);
 };
 
 #endif

@@ -11,48 +11,62 @@ RobotsCreator::RobotsCreator(
     _camera(camera),
     _mouseCursor(mouseCursor),
     _terrainGroup(terrainGroup),
-    _sceneManager(sceneManager)
+    _sceneManager(sceneManager),
+    _raySceneQuery(_sceneManager->createRayQuery(Ogre::Ray()))
 {}
 
+RobotsCreator::~RobotsCreator() {
+    _sceneManager->destroyQuery(_raySceneQuery);
+}
+
 bool RobotsCreator::mousePressed(const OIS::MouseEvent &me, OIS::MouseButtonID id) {
+    _leftMBPressed = true;
     if(id == OIS::MB_Left) {
-        if(_prevRobotNode) {
-            _prevRobotNode->showBoundingBox(false);
+        if(_selectedNode) {
+            _selectedNode->showBoundingBox(false);
         }
-        Ogre::TerrainGroup::RayResult result = castRayForCurrentMousePos(me);
-        if (result.terrain) {
-            _currentRobotNode = _sceneManager->getRootSceneNode()->createChildSceneNode();
-            _currentRobotNode->setPosition(result.position);
-            if(_robotMode) {
-                _currentRobotNode->setScale(0.45, 0.45, 0.45);
-                _currentRobotNode->attachObject(
-                    _sceneManager->createEntity("robot.mesh")
-                );
-            } else {
-                _currentRobotNode->setScale(0.2, 0.2, 0.2);
-                _currentRobotNode->attachObject(
-                    _sceneManager->createEntity("ninja.mesh")
-                );
+        Ogre::Ray mouseRay = castRayForCurrentMousePos(me);
+        _selectedNode = getSceneNodeUnderRay(mouseRay);
+        if(!_selectedNode) {
+            Ogre::TerrainGroup::RayResult result = _terrainGroup->rayIntersects(mouseRay);
+            if (result.terrain) {
+                _currentObjectNode = _sceneManager->getRootSceneNode()->createChildSceneNode();
+                _currentObjectNode->setPosition(result.position);
+                if(_robotMode) {
+                    _currentObjectNode->setScale(0.45, 0.45, 0.45);
+                    _currentObjectNode->attachObject(
+                        _sceneManager->createEntity("robot.mesh")
+                    );
+                } else {
+                    _currentObjectNode->setScale(0.2, 0.2, 0.2);
+                    _currentObjectNode->attachObject(
+                        _sceneManager->createEntity("ninja.mesh")
+                    );
+                }
+                _selectedNode = _currentObjectNode;
             }
-            _currentRobotNode->showBoundingBox(true);
+        }
+        if(_selectedNode) {
+            _selectedNode->showBoundingBox(true);
         }
     }
     return true; 
 }
 
 bool RobotsCreator::mouseReleased(const OIS::MouseEvent &me, OIS::MouseButtonID id) {
+    _leftMBPressed = false;
     if(id == OIS::MB_Left) {
-        _prevRobotNode = _currentRobotNode;
-        _currentRobotNode = nullptr;
+        _currentObjectNode = nullptr;
     }
-    return true; 
+    return true;
 }
 
 bool RobotsCreator::mouseMoved(const OIS::MouseEvent &me) {
-    if(_currentRobotNode) {
-        Ogre::TerrainGroup::RayResult result = castRayForCurrentMousePos(me);
+    if(_leftMBPressed && _currentObjectNode) {
+        Ogre::Ray mouseRay = castRayForCurrentMousePos(me);
+        Ogre::TerrainGroup::RayResult result = _terrainGroup->rayIntersects(mouseRay);
         if(result.terrain) {
-            _currentRobotNode->setPosition(result.position);
+            _currentObjectNode->setPosition(result.position);
         }
     }
 }
@@ -64,11 +78,23 @@ bool RobotsCreator::keyPressed(const OIS::KeyEvent &arg) {
     return true;
 }
 
-Ogre::TerrainGroup::RayResult RobotsCreator::castRayForCurrentMousePos(const OIS::MouseEvent &me) {
+Ogre::Ray RobotsCreator::castRayForCurrentMousePos(const OIS::MouseEvent &me) {
     CEGUI::Vector2f mousePos = _mouseCursor->getPosition();
-    Ogre::Ray mouseRay = _camera->getCameraToViewportRay(
+    return _camera->getCameraToViewportRay(
         mousePos.d_x / float(me.state.width),
         mousePos.d_y / float(me.state.height)
     );
-    return _terrainGroup->rayIntersects(mouseRay);
+}
+
+Ogre::SceneNode* RobotsCreator::getSceneNodeUnderRay(Ogre::Ray ray) {
+    _raySceneQuery->setRay(ray);
+    _raySceneQuery->setSortByDistance(true);
+    Ogre::RaySceneQueryResult& rayQueryRes = _raySceneQuery->execute();
+    for (auto &entry : rayQueryRes) {
+        Ogre::MovableObject *mo = entry.movable;
+        if(mo && mo->getName() != "" && mo->getName() != "MainCam") {
+            return mo->getParentSceneNode();
+        }
+    }
+    return nullptr;
 }
