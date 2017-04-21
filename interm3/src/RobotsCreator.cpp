@@ -34,14 +34,14 @@ bool RobotsCreator::mousePressed(const OIS::MouseEvent &me, OIS::MouseButtonID i
                 _currentObjectNode->setPosition(result.position);
                 if(_robotMode) {
                     _currentObjectNode->setScale(0.45, 0.45, 0.45);
-                    _currentObjectNode->attachObject(
-                        _sceneManager->createEntity("robot.mesh")
-                    );
+                    Ogre::Entity *ent = _sceneManager->createEntity("robot.mesh");
+                    ent->setQueryFlags(ROBOT_MASK);
+                    _currentObjectNode->attachObject(ent);
                 } else {
                     _currentObjectNode->setScale(0.2, 0.2, 0.2);
-                    _currentObjectNode->attachObject(
-                        _sceneManager->createEntity("ninja.mesh")
-                    );
+                    Ogre::Entity *ent = _sceneManager->createEntity("ninja.mesh");
+                    ent->setQueryFlags(NINJA_MASK);
+                    _currentObjectNode->attachObject(ent);
                 }
                 _selectedNode = _currentObjectNode;
             }
@@ -89,6 +89,7 @@ Ogre::Ray RobotsCreator::castRayForCurrentMousePos(const OIS::MouseEvent &me) {
 Ogre::SceneNode* RobotsCreator::getSceneNodeUnderRay(Ogre::Ray ray) {
     _raySceneQuery->setRay(ray);
     _raySceneQuery->setSortByDistance(true);
+    _raySceneQuery->setQueryMask(_robotMode ? ROBOT_MASK : NINJA_MASK);
     Ogre::RaySceneQueryResult& rayQueryRes = _raySceneQuery->execute();
     for (auto &entry : rayQueryRes) {
         Ogre::MovableObject *mo = entry.movable;

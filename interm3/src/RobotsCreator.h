@@ -39,6 +39,9 @@ private:
 
     Ogre::Ray castRayForCurrentMousePos(const OIS::MouseEvent &me);
     Ogre::SceneNode* getSceneNodeUnderRay(Ogre::Ray ray);
+
+    const Ogre::uint32 ROBOT_MASK = 1 << 0;
+    const Ogre::uint32 NINJA_MASK = 1 << 1;
 };
 
 #endif
