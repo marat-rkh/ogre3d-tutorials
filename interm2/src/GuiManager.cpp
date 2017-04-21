@@ -26,42 +26,57 @@ void GuiManager::setupGUI() {
     _guiContext->setRootWindow(rootWin);
 }
 
-void GuiManager::notifyFrameRenderingQueued(Ogre::Real timeSinceLastFrame) {
+bool GuiManager::frameRenderingQueued(const Ogre::FrameEvent& evt) {
     //Need to inject timestamps to CEGUI System.
-    CEGUI::System::getSingleton().injectTimePulse(timeSinceLastFrame);
+    CEGUI::System::getSingleton().injectTimePulse(evt.timeSinceLastFrame);
+    return true;
 }
 
-void GuiManager::notifyKeyPressed(CEGUI::Key::Scan code, CEGUI::Key::Scan text) {
-    _guiContext->injectKeyDown(code);
-    _guiContext->injectChar(text);
+bool GuiManager::keyPressed(const OIS::KeyEvent &arg) {
+    _guiContext->injectKeyDown(static_cast<CEGUI::Key::Scan>(arg.key));
+    _guiContext->injectChar(static_cast<CEGUI::Key::Scan>(arg.text));
+    return true;
 }
 
-void GuiManager::notifyKeyReleased(CEGUI::Key::Scan code) {
-    CEGUI::System::getSingleton().getDefaultGUIContext().injectKeyUp(code);
+bool GuiManager::keyReleased(const OIS::KeyEvent &arg) {
+    _guiContext->injectKeyUp(static_cast<CEGUI::Key::Scan>(arg.key));
+    return true;
 }
 
-void GuiManager::notifyMouseMoved(float deltaX, float deltaY, float deltaWheel) {
-    _guiContext->injectMouseMove(deltaX, deltaY);
+bool GuiManager::mouseMoved(const OIS::MouseEvent &arg) {
+    _guiContext->injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
     // Scroll wheel.
-    if (deltaWheel) {
-        _guiContext->injectMouseWheelChange(deltaWheel / 120.0f);
+    if (arg.state.Z.rel) {
+        _guiContext->injectMouseWheelChange(arg.state.Z.rel / 120.0f);
     }
+    return true;
 }
 
-void GuiManager::notifyMousePressed(CEGUI::MouseButton id) {
-    _guiContext->injectMouseButtonDown(id);
+bool GuiManager::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
+    _guiContext->injectMouseButtonDown(OIStoCEGUIMouseButton(id));
 
     _guiContext->getMouseCursor().hide();
     _mousePosition = _guiContext->getMouseCursor().getPosition();
+    return true;
 }
 
-void GuiManager::notifyMouseReleased(CEGUI::MouseButton id) {
-    _guiContext->injectMouseButtonUp(id);
+bool GuiManager::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
+    _guiContext->injectMouseButtonUp(OIStoCEGUIMouseButton(id));
 
     _guiContext->getMouseCursor().setPosition(_mousePosition);
     _guiContext->getMouseCursor().show();
+    return true;
 }
 
-void GuiManager::pressExitButton() {
-    _gameState.isExitGame(true);
+CEGUI::MouseButton GuiManager::OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID) {
+    switch (buttonID) {
+    case OIS::MB_Left:
+        return CEGUI::LeftButton;
+    case OIS::MB_Right:
+        return CEGUI::RightButton;
+    case OIS::MB_Middle:
+        return CEGUI::MiddleButton;
+    default:
+        return CEGUI::LeftButton;
+    }
 }

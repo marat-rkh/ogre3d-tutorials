@@ -1,12 +1,10 @@
 #include "InputSystemManager.h"
 
 InputSystemManager::InputSystemManager(
-    GameState &gameState, 
-    GuiManager &guiManager,
+    GameState &gameState,
     Ogre::SceneNode *cameraNode
 ) :
     _gameState(gameState),
-    _GUIManager(guiManager),
     _cameraNode(cameraNode),
     _cameraMovementDirection(Ogre::Vector3::ZERO)
 {}
@@ -50,10 +48,6 @@ bool InputSystemManager::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 }
 
 bool InputSystemManager::keyPressed(const OIS::KeyEvent &arg) {
-    _GUIManager.notifyKeyPressed(
-        static_cast<CEGUI::Key::Scan>(arg.key),
-        static_cast<CEGUI::Key::Scan>(arg.text)
-    );
     switch (arg.key) {
     case OIS::KC_ESCAPE: 
         _gameState.isExitGame(true);
@@ -92,7 +86,6 @@ bool InputSystemManager::keyPressed(const OIS::KeyEvent &arg) {
 }
 
 bool InputSystemManager::keyReleased(const OIS::KeyEvent &arg) {
-    _GUIManager.notifyKeyReleased(static_cast<CEGUI::Key::Scan>(arg.key));
     switch (arg.key) {
     case OIS::KC_UP:
     case OIS::KC_W:
@@ -140,7 +133,6 @@ bool InputSystemManager::keyReleased(const OIS::KeyEvent &arg) {
 }
 
 bool InputSystemManager::mouseMoved(const OIS::MouseEvent &arg) {
-    _GUIManager.notifyMouseMoved(arg.state.X.rel, arg.state.Y.rel, arg.state.Z.rel);
     if (arg.state.buttonDown(OIS::MB_Right)) {
         _cameraNode->yaw(Ogre::Degree(-CAMERA_ROT * arg.state.X.rel), Ogre::Node::TS_WORLD);
         _cameraNode->pitch(Ogre::Degree(-CAMERA_ROT * arg.state.Y.rel), Ogre::Node::TS_LOCAL);
@@ -152,7 +144,6 @@ bool InputSystemManager::mouseMoved(const OIS::MouseEvent &arg) {
 }
 
 bool InputSystemManager::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
-    _GUIManager.notifyMousePressed(OIStoCEGUIMouseButton(id));
     for(auto l : _listeners) {
         l->mousePressed(arg, id);
     }
@@ -160,22 +151,8 @@ bool InputSystemManager::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButt
 }
 
 bool InputSystemManager::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
-    _GUIManager.notifyMouseReleased(OIStoCEGUIMouseButton(id));
     for(auto l : _listeners) {
         l->mouseReleased(arg, id);
     }
     return true;
-}
-
-CEGUI::MouseButton InputSystemManager::OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID) {
-    switch (buttonID) {
-    case OIS::MB_Left:
-        return CEGUI::LeftButton;
-    case OIS::MB_Right:
-        return CEGUI::RightButton;
-    case OIS::MB_Middle:
-        return CEGUI::MiddleButton;
-    default:
-        return CEGUI::LeftButton;
-    }
 }

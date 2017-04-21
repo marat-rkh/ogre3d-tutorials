@@ -31,7 +31,7 @@ class InputSystemManager :
     public OIS::MouseListener
 {
 public:
-    InputSystemManager(GameState &gameState, GuiManager &guiManager, Ogre::SceneNode *cameraNode);
+    InputSystemManager(GameState &gameState, Ogre::SceneNode *cameraNode);
 
     void init(size_t windowHnd);
     void setMouseArea(unsigned int width, unsigned int height);
@@ -49,7 +49,6 @@ protected:
     bool mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) override;
 private:
     GameState &_gameState;
-    GuiManager &_GUIManager;
 
     Ogre::SceneNode *_cameraNode;
     Ogre::Vector3 _cameraMovementDirection;
@@ -61,8 +60,6 @@ private:
     OIS::Keyboard* mKeyboard = nullptr;
 
     vector<InputEventListener*> _listeners;
-
-    CEGUI::MouseButton OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID);
 };
 
 #endif // #ifndef __InputSystemManager_h_

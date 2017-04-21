@@ -48,6 +48,7 @@ bool OgreApplication::go() {
     
     ogreLog("*** Initializing GEGUI ***");
     _GUIManager.initGUISystem();
+    _inputSystemManager->addInputEventListener(&_GUIManager);
     
     createScene();
 
@@ -101,7 +102,7 @@ bool OgreApplication::initOgre() {
         Ogre::Vector3(0, 0, 0)
     );
     _cameraNode->attachObject(mCamera);
-    _inputSystemManager = new InputSystemManager(_gameState, _GUIManager, _cameraNode);
+    _inputSystemManager = new InputSystemManager(_gameState, _cameraNode);
 
     return true;
 }
@@ -160,7 +161,7 @@ void OgreApplication::windowClosed(Ogre::RenderWindow* rw) {
 }
 
 bool OgreApplication::frameRenderingQueued(const Ogre::FrameEvent& evt) {
-    _GUIManager.notifyFrameRenderingQueued(evt.timeSinceLastFrame);
+    _GUIManager.frameRenderingQueued(evt);
     _inputSystemManager->frameRenderingQueued(evt);
     if(mWindow->isClosed() || _gameState.isExitGame()) {
         return false;

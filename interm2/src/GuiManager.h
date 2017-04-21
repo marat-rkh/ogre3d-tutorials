@@ -4,25 +4,28 @@
 #include <atomic>
 
 #include <OgrePrerequisites.h>
+#include <OgreFrameListener.h>
 #include <CEGUI/CEGUI.h>
 #include <CEGUI/RendererModules/Ogre/Renderer.h>
 #include <CEGUI/MouseCursor.h>
 
 #include "GameState.h"
+#include "InputEventListener.h"
 
-class GuiManager {
+class GuiManager : public InputEventListener {
 public:
     GuiManager(GameState &gameState);
     
     void initGUISystem();
     void setupGUI();
-    void notifyFrameRenderingQueued(Ogre::Real timeSinceLastFrame);
-    void notifyKeyPressed(CEGUI::Key::Scan code, CEGUI::Key::Scan text);
-    void notifyKeyReleased(CEGUI::Key::Scan code);
-    void notifyMouseMoved(float deltaX, float deltaY, float deltaWheel);
-    void notifyMousePressed(CEGUI::MouseButton id);
-    void notifyMouseReleased(CEGUI::MouseButton id);
-    void pressExitButton();
+    bool frameRenderingQueued(const Ogre::FrameEvent& evt);
+
+    bool keyPressed(const OIS::KeyEvent &arg) override;
+    bool keyReleased(const OIS::KeyEvent &arg) override;
+    bool mouseMoved(const OIS::MouseEvent &arg) override;
+    bool mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) override;
+    bool mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) override;
+
     CEGUI::MouseCursor& mouseCursor() { return _guiContext->getMouseCursor(); }
 private:
     GameState &_gameState;
@@ -30,6 +33,8 @@ private:
 
     CEGUI::GUIContext *_guiContext = nullptr;
     CEGUI::Vector2f _mousePosition;
+
+    CEGUI::MouseButton OIStoCEGUIMouseButton(const OIS::MouseButtonID &buttonID);
 };
 
 #endif // #ifndef __GuiManager_h_
