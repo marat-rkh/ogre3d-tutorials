@@ -54,17 +54,19 @@ bool GuiManager::mouseMoved(const OIS::MouseEvent &arg) {
 
 bool GuiManager::mousePressed(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
     _guiContext->injectMouseButtonDown(OIStoCEGUIMouseButton(id));
-
-    _guiContext->getMouseCursor().hide();
-    _mousePosition = _guiContext->getMouseCursor().getPosition();
+    if(id == OIS::MB_Right) {
+        _guiContext->getMouseCursor().hide();
+        _mousePosition = _guiContext->getMouseCursor().getPosition();
+    }
     return true;
 }
 
 bool GuiManager::mouseReleased(const OIS::MouseEvent &arg, OIS::MouseButtonID id) {
     _guiContext->injectMouseButtonUp(OIStoCEGUIMouseButton(id));
-
-    _guiContext->getMouseCursor().setPosition(_mousePosition);
-    _guiContext->getMouseCursor().show();
+    if(id == OIS::MB_Right) {
+        _guiContext->getMouseCursor().setPosition(_mousePosition);
+        _guiContext->getMouseCursor().show();
+    }
     return true;
 }
 

@@ -19,6 +19,7 @@ void SelectionBox::setCorners(float left, float top, float right, float bottom) 
     begin("Examples/BeachStones", Ogre::RenderOperation::OT_LINE_STRIP);
     position(left, top, -1);
     position(right, top, -1);
+    position(right, bottom, -1);
     position(left, bottom, -1);
     position(left, top, -1);
     end();

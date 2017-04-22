@@ -94,10 +94,10 @@ bool RobotsCreator::mouseMoved(const OIS::MouseEvent &me) {
             if(result.terrain && _currentObjectNode) {
                 _currentObjectNode->setPosition(result.position);
             }
-        } else if (_gameState.mode() == GameState::Mode::BOX_SELECTION) {
-            performBoxSelection(_selectionStart, _selectionStop);
-            _boxSelectionInProgress = false;
-            _selectionBox.setVisible(false);
+        } else if (_gameState.mode() == GameState::Mode::BOX_SELECTION && _boxSelectionInProgress) {
+            _selectionStop.x = _mouseCursor->getPosition().d_x / (float)me.state.width;
+            _selectionStop.y = _mouseCursor->getPosition().d_y / (float)me.state.height;
+            _selectionBox.setCorners(_selectionStart, _selectionStop);
         }
     }
 }
