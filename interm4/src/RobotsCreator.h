@@ -10,6 +10,9 @@
 #include <Terrain/OgreTerrainGroup.h>
 #include <OgreSceneManager.h>
 
+#include <vector>
+#include <list>
+
 // This class is something like level editor
 class RobotsCreator : public InputEventListener {
 public:
@@ -39,7 +42,7 @@ private:
 
     bool _leftMBPressed = false;
     Ogre::SceneNode* _currentObjectNode = nullptr;
-    Ogre::SceneNode* _selectedNode = nullptr;
+    std::list<Ogre::SceneNode*> _selectedNodes;
 
     bool _robotMode = true;
 
@@ -52,10 +55,11 @@ private:
     const Ogre::uint32 ROBOT_MASK = 1 << 0;
     const Ogre::uint32 NINJA_MASK = 1 << 1;
 
-    Ogre::Ray castRayForCurrentMousePos(const OIS::MouseEvent &me);
+    Ogre::Vector2 getMousePos(const OIS::MouseEvent &me);
+    void findNodesInBox(std::list<Ogre::SceneNode*> &nodes, Ogre::Vector2 &start, Ogre::Vector2 &stop);
     Ogre::SceneNode* getSceneNodeUnderRay(Ogre::Ray ray);
-
-    void performBoxSelection(Ogre::Vector2 &start, Ogre::Vector2 &stop);
+    void selectAllNodes(std::list<Ogre::SceneNode*> &nodes);
+    void deselectAllNodes(std::list<Ogre::SceneNode*> &nodes);
 };
 
 #endif
